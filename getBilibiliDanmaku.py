@@ -1,15 +1,24 @@
+# -*- coding: utf-8 -*-
+
 import random
 import re
-
 import requests
+import xlwt
+from danmakuDetailsMap import *
 
 regexVerdictAvNumber = r'[0-9]+'
 regexCidAndAid = r'cid=(.*?)&aid=(.*?)&pre_ad='
+regexTitle = r'"title":"(.*?)"'
+regexDanmaku = r'<d p="(.*?),(.*?),(.*?),(.*?),(.*?),(.*?),(.*?),(.*?)">(.*?)</d>'
 
 videoRootUrl = 'https://www.bilibili.com/video/av%s'
+danmakuRootUrl = 'https://comment.bilibili.com/%s.xml'
+requestHeader = None
 
 
-def getHtmlByAid(avNumber):
+# av号获取视频源码
+def getVideoHtmlByAid(avNumber):
+    global requestHeader
     requestHeader = randomHeader()
     while not re.match(regexVerdictAvNumber, avNumber):
         avNumber = input("av号格式有误，重新输入：")
@@ -18,17 +27,107 @@ def getHtmlByAid(avNumber):
     try:
         htmlResponse = requests.get(videoUrl, headers=requestHeader, timeout=30)
     except (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout):
-        print("********获取网页源代码超时********")
+        print("********获取视频网页源代码超时********")
     if htmlResponse.status_code != 200:
-        raise RuntimeError("获取原码失败")
+        raise RuntimeError("获取视频源码失败")
+    print("已获取视频源码")
     return htmlResponse.text
 
 
+# 网页源码提取视频信息
 def getCidAndAid(htmlSource):
+    # TODO：分P视频的获取
     CAid = re.findall(regexCidAndAid, htmlSource, re.S)[0]
-    return {'cid': CAid[0], 'aid': CAid[1]}
+    title = re.findall(regexTitle, htmlSource, re.S)[0]
+    return {'cid': CAid[0], 'aid': CAid[1], 'title': title}
 
 
+# 通过cid获取弹幕源码
+def getDanmakuHtml(cidAndAid):
+    global requestHeader
+    danmakuUrl = danmakuRootUrl % cidAndAid['cid']
+    danmakuResponse = None
+    try:
+        danmakuResponse = requests.get(danmakuUrl, headers=requestHeader, timeout=30)
+    except (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout):
+        print("********获取弹幕源代码超时********")
+    if danmakuResponse.status_code != 200:
+        raise RuntimeError("获取弹幕源码失败")
+    print("已获取弹幕源码")
+    return danmakuResponse.text
+
+
+# xml提取弹幕信息
+def getDanmaku(danmakuSource):
+    danmakuItems = re.findall(regexDanmaku, danmakuSource, re.S)
+    danmakuList = []
+    for i in range(0, 35):  # 测试用数据
+        danmakuItem = danmakuItems[i]
+        danmaku = {'appearTime': danmakuItem[0],
+                   'type': danmakuItem[1],
+                   'fontSize': danmakuItem[2],
+                   'color': hex(int(danmakuItem[3])),
+                   'sentTimestamp': danmakuItem[4],
+                   'pool': danmakuItem[5],
+                   'userId': danmakuItem[6],
+                   'repository': danmakuItem[7],
+                   'content': danmakuItem[8]}
+        danmakuList.append(danmaku)
+    print("已获取弹幕")
+    return danmakuList
+
+
+# 写入excel
+def writeDanmakuToExcel(videoInformation, danmakuList, filePath):
+    filePath = filePathAvailable(filePath)
+    # 介个似类似于游标的东西⁄(⁄ ⁄•⁄ω⁄•⁄ ⁄)⁄
+    row = 4
+    tempText = None
+    book = xlwt.Workbook(encoding='utf-8', style_compression=0)
+    sheet = book.add_sheet(videoInformation['title'], cell_overwrite_ok=True)
+    sheet.write(0, 0, 'av号')
+    sheet.write(0, 1, str(videoInformation['aid']))
+    sheet.write(1, 0, '视频名称')
+    sheet.write(1, 1, videoInformation['title'])
+    sheet.write(3, 0, '弹幕出现时间')
+    sheet.write(3, 1, '弹幕内容')
+    sheet.write(3, 2, '弹幕颜色')
+    sheet.write(3, 3, '弹幕发送时间')
+    sheet.write(3, 4, '弹幕类型')
+    sheet.write(3, 5, '字体大小')
+    sheet.write(3, 6, '弹幕池')
+    sheet.write(3, 7, '发送者id')
+    sheet.write(3, 8, '弹幕id')
+    for danmaku in danmakuList:
+        sheet.write(row, 0, danmaku['appearTime'])
+        sheet.write(row, 1, danmaku['content'])
+        sheet.write(row, 2, danmaku['color'])
+        sheet.write(row, 3, getDanmakuSentTimestamp(danmaku['sentTimestamp']))
+        sheet.write(row, 4, getDanmakuType(danmaku['type']))
+        sheet.write(row, 5, getDanmakuFontSize(danmaku['fontSize']))
+        sheet.write(row, 6, getDanmakuPool(danmaku['pool']))
+        sheet.write(row, 7, danmaku['userId'])
+        sheet.write(row, 8, danmaku['repository'])
+        row += 1
+
+    book.save(filePath)
+
+
+# 判断filePath是否正确
+def filePathAvailable(filePath):
+    # TODO：filePath判断
+    return filePath
+
+
+# 输出一行数据
+def printDanmaku(danmaku):
+    print("弹幕内容：%s" % danmaku['content'])
+    print("弹幕颜色：%s" % danmaku['color'])
+    print("弹幕出现时间：第%s秒" % danmaku['appearTime'])
+    print("弹幕发送时间：%s" % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(int(danmaku['sentTimestamp']))))
+
+
+# 随机请求头
 def randomHeader():
     headConnection = ['Keep-Alive', 'close']
     headAccept = ['text/html, application/xhtml+xml, */*']
