@@ -10,6 +10,7 @@ regexVerdictAvNumber = r'[0-9]+'
 regexCidAndAid = r'cid=(.*?)&aid=(.*?)&pre_ad='
 regexTitle = r'"title":"(.*?)"'
 regexDanmaku = r'<d p="(.*?),(.*?),(.*?),(.*?),(.*?),(.*?),(.*?),(.*?)">(.*?)</d>'
+regexSheetName = r'[\:|\\|\/|\?|\*|\[|\]]+'
 
 videoRootUrl = 'https://www.bilibili.com/video/av%s'
 danmakuRootUrl = 'https://comment.bilibili.com/%s.xml'
@@ -61,8 +62,9 @@ def getDanmakuHtml(cidAndAid):
 def getDanmaku(danmakuSource):
     danmakuItems = re.findall(regexDanmaku, danmakuSource, re.S)
     danmakuList = []
-    for i in range(0, 35):  # 测试用数据
-        danmakuItem = danmakuItems[i]
+    # for i in range(0, 35):  # 测试用数据
+    for danmakuItem in danmakuItems:
+        # danmakuItem = danmakuItems[i]
         danmaku = {'appearTime': danmakuItem[0],
                    'type': danmakuItem[1],
                    'fontSize': danmakuItem[2],
@@ -78,17 +80,17 @@ def getDanmaku(danmakuSource):
 
 
 # 写入excel
-def writeDanmakuToExcel(videoInformation, danmakuList, filePath):
+def writeDanmakuToExcel(videoInfo, danmakuList, filePath):
     filePath = filePathAvailable(filePath)
     # 介个似类似于游标的东西⁄(⁄ ⁄•⁄ω⁄•⁄ ⁄)⁄
     row = 4
-    tempText = None
     book = xlwt.Workbook(encoding='utf-8', style_compression=0)
-    sheet = book.add_sheet(videoInformation['title'], cell_overwrite_ok=True)
+    title = sheetNameAvailable(videoInfo)
+    sheet = book.add_sheet(title, cell_overwrite_ok=True)
     sheet.write(0, 0, 'av号')
-    sheet.write(0, 1, str(videoInformation['aid']))
+    sheet.write(0, 1, str(videoInfo['aid']))
     sheet.write(1, 0, '视频名称')
-    sheet.write(1, 1, videoInformation['title'])
+    sheet.write(1, 1, videoInfo['title'])
     sheet.write(3, 0, '弹幕出现时间')
     sheet.write(3, 1, '弹幕内容')
     sheet.write(3, 2, '弹幕颜色')
@@ -99,7 +101,7 @@ def writeDanmakuToExcel(videoInformation, danmakuList, filePath):
     sheet.write(3, 7, '发送者id')
     sheet.write(3, 8, '弹幕id')
     for danmaku in danmakuList:
-        sheet.write(row, 0, danmaku['appearTime'])
+        sheet.write(row, 0, float(danmaku['appearTime']))
         sheet.write(row, 1, danmaku['content'])
         sheet.write(row, 2, danmaku['color'])
         sheet.write(row, 3, getDanmakuSentTimestamp(danmaku['sentTimestamp']))
@@ -111,12 +113,22 @@ def writeDanmakuToExcel(videoInformation, danmakuList, filePath):
         row += 1
 
     book.save(filePath)
+    print('写入excel已成功')
 
 
 # 判断filePath是否正确
 def filePathAvailable(filePath):
     # TODO：filePath判断
     return filePath
+
+
+def sheetNameAvailable(videoInfo):
+    title = videoInfo['title']
+    if len(videoInfo['title']) >= 31:
+        title = 'av' + videoInfo['aid']
+    if re.match(regexSheetName, videoInfo['title'], re.S):
+        title = 'av' + videoInfo['aid']
+    return title
 
 
 # 输出一行数据
