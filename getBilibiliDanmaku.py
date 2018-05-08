@@ -38,8 +38,8 @@ def getVideoHtmlByAid(avNumber):
 # 网页源码提取视频信息
 def getCidAndAid(htmlSource):
     # TODO：分P视频的获取
-    CAid = re.findall(regexCidAndAid, htmlSource, re.S)[0]
-    title = re.findall(regexTitle, htmlSource, re.S)[0]
+    CAid = re.findall(regexCidAndAid, htmlSource)[0]
+    title = re.findall(regexTitle, htmlSource)[0]
     return {'cid': CAid[0], 'aid': CAid[1], 'title': title}
 
 
@@ -65,7 +65,7 @@ def getDanmaku(danmakuSource):
     # for i in range(0, 35):  # 测试用数据
     for danmakuItem in danmakuItems:
         # danmakuItem = danmakuItems[i]
-        danmaku = {'appearTime': danmakuItem[0],
+        danmaku = {'appearTime': float(danmakuItem[0]),
                    'type': danmakuItem[1],
                    'fontSize': danmakuItem[2],
                    'color': hex(int(danmakuItem[3])),
@@ -80,12 +80,14 @@ def getDanmaku(danmakuSource):
 
 
 # 写入excel
-def writeDanmakuToExcel(videoInfo, danmakuList, filePath):
-    filePath = filePathAvailable(filePath)
+def writeDanmakuToExcel(videoInfo, danmakuList, folderPath):
+    folderPath = folderPathAvailable(folderPath)
+    title = titleAvailable(videoInfo)
+    filePath = folderPath + '弹幕信息_%s.xls' % title
+
     # 介个似类似于游标的东西⁄(⁄ ⁄•⁄ω⁄•⁄ ⁄)⁄
     row = 4
     book = xlwt.Workbook(encoding='utf-8', style_compression=0)
-    title = sheetNameAvailable(videoInfo)
     sheet = book.add_sheet(title, cell_overwrite_ok=True)
     sheet.write(0, 0, 'av号')
     sheet.write(0, 1, str(videoInfo['aid']))
@@ -101,7 +103,7 @@ def writeDanmakuToExcel(videoInfo, danmakuList, filePath):
     sheet.write(3, 7, '发送者id')
     sheet.write(3, 8, '弹幕id')
     for danmaku in danmakuList:
-        sheet.write(row, 0, float(danmaku['appearTime']))
+        sheet.write(row, 0, danmaku['appearTime'])
         sheet.write(row, 1, danmaku['content'])
         sheet.write(row, 2, danmaku['color'])
         sheet.write(row, 3, getDanmakuSentTimestamp(danmaku['sentTimestamp']))
@@ -117,16 +119,16 @@ def writeDanmakuToExcel(videoInfo, danmakuList, filePath):
 
 
 # 判断filePath是否正确
-def filePathAvailable(filePath):
-    # TODO：filePath判断
-    return filePath
+def folderPathAvailable(folderPath):
+    # TODO：folderPath判断
+    return folderPath
 
 
-def sheetNameAvailable(videoInfo):
+def titleAvailable(videoInfo):
     title = videoInfo['title']
-    if len(videoInfo['title']) >= 31:
+    if len(title) >= 31:
         title = 'av' + videoInfo['aid']
-    if re.match(regexSheetName, videoInfo['title'], re.S):
+    if re.match(regexSheetName, videoInfo['title']):
         title = 'av' + videoInfo['aid']
     return title
 
