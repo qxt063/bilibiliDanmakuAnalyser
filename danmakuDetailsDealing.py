@@ -29,7 +29,7 @@ def formatColor(color):
     return '#%s' % re.sub(regexColor, '', str(hex(int(color)))).zfill(6)
 
 
-def getValuesByKey(diction, key):
+def getValueListByKey(diction, key):
     valueList = []
     for item in diction:
         valueList.append(item[key])

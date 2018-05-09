@@ -10,7 +10,7 @@ regexVerdictAvNumber = r'[0-9]+'
 regexCidAndAid = r'cid=(.*?)&aid=(.*?)&pre_ad='
 regexTitle = r'"title":"(.*?)"'
 regexDanmaku = r'<d p="(.*?),(.*?),(.*?),(.*?),(.*?),(.*?),(.*?),(.*?)">(.*?)</d>'
-regexSheetName = r'[\:|\\|\/|\?|\*|\[|\]]+'
+regexSheetName = r'\:|\\|\/|\?|\*|\[|\]'
 
 videoRootUrl = 'https://www.bilibili.com/video/av%s'
 danmakuRootUrl = 'https://comment.bilibili.com/%s.xml'
@@ -71,7 +71,7 @@ def getDanmaku(danmakuSource):
                    'color': formatColor(danmakuItem[3]),
                    'sentTimestamp': danmakuItem[4],
                    'pool': danmakuItem[5],
-                   'userId': danmakuItem[6],
+                   'feizhaiId': danmakuItem[6],
                    'repository': danmakuItem[7],
                    'content': danmakuItem[8]}
         danmakuList.append(danmaku)
@@ -122,7 +122,7 @@ def writeDanmakuToExcel(videoInfo, danmakuList, folderPath):
         sheet.write(row, 4, getDanmakuType(danmaku['type']), defaultStyle)
         sheet.write(row, 5, getDanmakuFontSize(danmaku['fontSize']), defaultStyle)
         sheet.write(row, 6, getDanmakuPool(danmaku['pool']), defaultStyle)
-        sheet.write(row, 7, danmaku['userId'], defaultStyle)
+        sheet.write(row, 7, danmaku['feizhaiId'], defaultStyle)
         sheet.write(row, 8, danmaku['repository'], defaultStyle)
         row += 1
 
@@ -165,8 +165,7 @@ def titleAvailable(videoInfo):
     title = videoInfo['title']
     if len(title) >= 31:
         title = 'av' + videoInfo['aid']
-    if re.match(regexSheetName, videoInfo['title']):
-        title = 'av' + videoInfo['aid']
+    title = re.sub(regexSheetName, '', title, re.S)
     return title
 
 
