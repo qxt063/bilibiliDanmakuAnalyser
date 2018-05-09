@@ -4,7 +4,7 @@ import random
 import re
 import requests
 import xlwt
-from danmakuDetailsMap import *
+from danmakuDetailsDealing import *
 
 regexVerdictAvNumber = r'[0-9]+'
 regexCidAndAid = r'cid=(.*?)&aid=(.*?)&pre_ad='
@@ -68,7 +68,7 @@ def getDanmaku(danmakuSource):
         danmaku = {'appearTime': float(danmakuItem[0]),
                    'type': danmakuItem[1],
                    'fontSize': danmakuItem[2],
-                   'color': hex(int(danmakuItem[3])),
+                   'color': formatColor(danmakuItem[3]),
                    'sentTimestamp': danmakuItem[4],
                    'pool': danmakuItem[5],
                    'userId': danmakuItem[6],
@@ -102,20 +102,57 @@ def writeDanmakuToExcel(videoInfo, danmakuList, folderPath):
     sheet.write(3, 6, '弹幕池')
     sheet.write(3, 7, '发送者id')
     sheet.write(3, 8, '弹幕id')
+    defaultStyle = setDefaultStyle()
+    # colorStyleList = []
     for danmaku in danmakuList:
-        sheet.write(row, 0, danmaku['appearTime'])
-        sheet.write(row, 1, danmaku['content'])
-        sheet.write(row, 2, danmaku['color'])
-        sheet.write(row, 3, getDanmakuSentTimestamp(danmaku['sentTimestamp']))
-        sheet.write(row, 4, getDanmakuType(danmaku['type']))
-        sheet.write(row, 5, getDanmakuFontSize(danmaku['fontSize']))
-        sheet.write(row, 6, getDanmakuPool(danmaku['pool']))
-        sheet.write(row, 7, danmaku['userId'])
-        sheet.write(row, 8, danmaku['repository'])
+        # isExist = False
+        # colorStyle = defaultStyle
+        # for item in colorStyleList:
+        #     if item.font.colour_index == danmaku['color']:
+        #         isExist = True
+        #         colorStyle = item
+        #         break
+        # if not isExist:
+        #     colorStyle = setColorStyle(danmaku['color'])
+        #     colorStyleList.append(colorStyle)
+        sheet.write(row, 0, danmaku['appearTime'], defaultStyle)
+        sheet.write(row, 1, danmaku['content'], defaultStyle)
+        sheet.write(row, 2, danmaku['color'], defaultStyle)
+        sheet.write(row, 3, getDanmakuSentTimestamp(danmaku['sentTimestamp']), defaultStyle)
+        sheet.write(row, 4, getDanmakuType(danmaku['type']), defaultStyle)
+        sheet.write(row, 5, getDanmakuFontSize(danmaku['fontSize']), defaultStyle)
+        sheet.write(row, 6, getDanmakuPool(danmaku['pool']), defaultStyle)
+        sheet.write(row, 7, danmaku['userId'], defaultStyle)
+        sheet.write(row, 8, danmaku['repository'], defaultStyle)
         row += 1
 
     book.save(filePath)
     print('写入excel已成功')
+
+
+def setDefaultStyle():
+    style = xlwt.XFStyle()  # 初始化样式
+    font = xlwt.Font()  # 为样式创建字体
+    # 字体类型：比如宋体、仿宋
+    font.name = '宋体'
+    # 定义格式
+    style.font = font
+    return style
+
+
+# def setColorStyle(color):
+#     style = xlwt.XFStyle()  # 初始化样式
+#     font = xlwt.Font()  # 为样式创建字体
+#     # 字体类型：比如宋体、仿宋
+#     font.name = '宋体'
+#     # 设置字体颜色
+#     font.colour = color
+#     font.bold = True
+#     # 字体大小
+#     # font.height = height
+#     # 定义格式
+#     style.font = font
+#     return style
 
 
 # 判断filePath是否正确

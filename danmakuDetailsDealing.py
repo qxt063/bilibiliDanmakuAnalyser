@@ -1,4 +1,7 @@
+import re
 import time
+
+regexColor = r'0x'
 
 
 def getDanmakuSentTimestamp(timestamp):
@@ -20,3 +23,18 @@ def getDanmakuFontSize(fontSizeNumber):
 def getDanmakuPool(poolNumber):
     poolDict = {0: '普通池', 1: '字幕池', 2: '特殊池'}
     return poolDict.get(int(poolNumber))
+
+
+def formatColor(color):
+    return '#%s' % re.sub(regexColor, '', str(hex(int(color)))).zfill(6)
+
+
+def getValuesByKey(diction, key):
+    valueList = []
+    for item in diction:
+        valueList.append(item[key])
+    return valueList
+
+
+def sortDictByKey(diction, key, ifReverse=False):
+    return sorted(diction, key=lambda s: s[key], reverse=ifReverse)
