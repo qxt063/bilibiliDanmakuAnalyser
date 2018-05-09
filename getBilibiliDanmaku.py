@@ -118,7 +118,7 @@ def writeDanmakuToExcel(videoInfo, danmakuList, folderPath):
         sheet.write(row, 0, danmaku['appearTime'], defaultStyle)
         sheet.write(row, 1, danmaku['content'], defaultStyle)
         sheet.write(row, 2, danmaku['color'], defaultStyle)
-        sheet.write(row, 3, getDanmakuSentTimestamp(danmaku['sentTimestamp']), defaultStyle)
+        sheet.write(row, 3, convertTimestampToDateTime(danmaku['sentTimestamp']), defaultStyle)
         sheet.write(row, 4, getDanmakuType(danmaku['type']), defaultStyle)
         sheet.write(row, 5, getDanmakuFontSize(danmaku['fontSize']), defaultStyle)
         sheet.write(row, 6, getDanmakuPool(danmaku['pool']), defaultStyle)
@@ -174,7 +174,7 @@ def printDanmaku(danmaku):
     print("弹幕内容：%s" % danmaku['content'])
     print("弹幕颜色：%s" % danmaku['color'])
     print("弹幕出现时间：第%s秒" % danmaku['appearTime'])
-    print("弹幕发送时间：%s" % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(int(danmaku['sentTimestamp']))))
+    print("弹幕发送时间：%s" % convertTimestampToDateTime(danmaku['sentTimestamp']))
 
 
 # 随机请求头

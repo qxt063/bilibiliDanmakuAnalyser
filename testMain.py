@@ -8,16 +8,20 @@ if __name__ == '__main__':
     print(videoInfo)
     danmakuSource = getDanmakuHtml(videoInfo)
 
-    # videoInfo = testData.videoInfo2
-    # danmakuSource = testData.danmakuSource2
+    # videoInfo = testData.videoInfo  # test
+    # danmakuSource = testData.danmakuSource  # test
+
+    excelFolderPath = 'K:/test/danmaku/'
+    photoFolderPath = excelFolderPath + 'photo/'
     danmakuList = getDanmaku(danmakuSource)
-    countOfTime(videoInfo, danmakuList)
-    colorAnalyse(videoInfo, danmakuList)
-    countPerFeizhai(videoInfo, danmakuList)
+    countOfTime(videoInfo, danmakuList, photoFolderPath)
+    colorAnalyse(videoInfo, danmakuList, photoFolderPath)
+    countPerFeizhai(videoInfo, danmakuList, photoFolderPath)
+    danmakuHeatMap(videoInfo, danmakuList, photoFolderPath)
+    # print(convertTimestamp(danmakuList[0]['sentTimestamp'], "%m/%d/%Y"))  # test
+
+    # writeDanmakuToExcel(videoInfo, danmakuList, excelFolderPath)
 
     # for danmaku in danmakuList:
     #     printDanmaku(danmaku)
     #     print()
-
-    folderPath = 'K:/test/danmaku/'
-    writeDanmakuToExcel(videoInfo, danmakuList, folderPath)

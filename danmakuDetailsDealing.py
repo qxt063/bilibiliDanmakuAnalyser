@@ -4,8 +4,12 @@ import time
 regexColor = r'0x'
 
 
-def getDanmakuSentTimestamp(timestamp):
-    return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(int(timestamp)))
+def convertTimestampToDateTime(timestamp, outputFormat="%Y-%m-%d %H:%M:%S"):
+    return time.strftime(outputFormat, time.localtime(int(timestamp)))
+
+
+def convertDateTimeToTimestamp(dateTime, inputFormat="%Y-%m-%d %H:%M:%S"):
+    return int(time.mktime(time.strptime(dateTime, inputFormat)))
 
 
 def getDanmakuType(typeNumber):
