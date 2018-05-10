@@ -1,19 +1,32 @@
 # -*- coding: utf-8 -*-
+import os
 from datetime import datetime
+import random
 
+import jieba
 import matplotlib.pyplot as plt
 from matplotlib.font_manager import FontProperties
 import matplotlib.dates as mdates
+from scipy.misc import imread
 import numpy as np
+from wordcloud import WordCloud, ImageColorGenerator
 
 from danmakuDetailsDealing import *
+
+regexExoticChar = r"[0-9\s+\.\!\/_,$%^*()?;；:-【】+\"\']+|[+——！，;:。？、~@#￥%……&*（）]+"
+
+stopWordsPath = r'stopWords.txt'
+fontPath = r'res/font/YaHei.Consolas.1.11b.ttf'
+# backImagePath = r'res/backImg/%d.jpg'
+backImagePath = r'K:\code\信息安全综合实验\bilibiliDanmakuAnalyser\res\backImg\%d.jpg'
+root = os.path.dirname(__file__)
 
 font = FontProperties(fname=r"c:\windows\fonts\simsun.ttc", size=14)
 
 
 # 弹幕数与视频时间关系
 def countOfTime(videoInfo, danmakuList, photoFolderPath):
-    appearTimeList = getValueListByKey(danmakuList, 'appearTime')
+    appearTimeList = getValueListByKeyFromDict(danmakuList, 'appearTime')
     plt.figure(figsize=(12, 9))
     plt.hist(appearTimeList, bins=20, histtype='bar', rwidth=0.8)
     plt.xlabel('视频时间', fontproperties=font)
@@ -49,7 +62,7 @@ def colorAnalyse(videoInfo, danmakuList, photoFolderPath):
         else:
             colorName.append(item['color'])
 
-    colorCount = getValueListByKey(colorCountDictList, 'count')
+    colorCount = getValueListByKeyFromDict(colorCountDictList, 'count')
     # ,autopct='%3.1f %%'
     plt.figure(figsize=(19.2, 16.8))
     plt.pie(colorCount, labels=colorName, colors=colorSet, shadow=True, startangle=90)
@@ -68,7 +81,7 @@ def colorAnalyse(videoInfo, danmakuList, photoFolderPath):
 # 这是一个人数图，不是弹幕数图
 # 容易弄混
 def countPerFeizhai(videoInfo, danmakuList, photoFolderPath):
-    feizhaiList = getValueListByKey(danmakuList, 'feizhaiId')
+    feizhaiList = getValueListByKeyFromDict(danmakuList, 'feizhaiId')
     feizhaiSet = set(feizhaiList)
     countList = []
     for item in feizhaiSet:
@@ -101,23 +114,27 @@ def countPerFeizhai(videoInfo, danmakuList, photoFolderPath):
     plt.show()
 
 
+# 弹幕数随天折线图
 def danmakuHeatMap(videoInfo, danmakuList, photoFolderPath):
-    originalTimestampList = getValueListByKey(danmakuList, 'sentTimestamp')
+    originalTimestampList = getValueListByKeyFromDict(danmakuList, 'sentTimestamp')
     timestampList = []
     for item in originalTimestampList:
         timestampList.append(convertDateTimeToTimestamp(convertTimestampToDateTime(item, "%m/%d/%Y"), "%m/%d/%Y"))
     timestampSet = sorted(set(timestampList))
+    # 以上是获取对齐到天的排序好的时间戳集合
     dateSet = []
     for item in timestampSet:
         dateSet.append(convertTimestampToDateTime(item, '%m/%d/%Y'))
-    danmakuCount = []
+    danmakuAccumulateCount = []
+    danmakuCountPerDay = []
     isFirst = True
     for item in timestampSet:
         if isFirst:
-            danmakuCount.append(timestampList.count(item))
+            danmakuAccumulateCount.append(timestampList.count(item))
             isFirst = False
         else:
-            danmakuCount.append(danmakuCount[-1] + timestampList.count(item))
+            danmakuAccumulateCount.append(danmakuAccumulateCount[-1] + timestampList.count(item))
+        danmakuCountPerDay.append(timestampList.count(item))
 
     # 横坐标信息
     xs = [datetime.strptime(d, '%m/%d/%Y').date() for d in dateSet]
@@ -127,12 +144,58 @@ def danmakuHeatMap(videoInfo, danmakuList, photoFolderPath):
     # 显示图例
     plt.gcf().autofmt_xdate()  # 自动旋转日期标记
     plt.figure(figsize=(12, 9))
-    plt.plot(xs, danmakuCount)
-    plt.title('%s\nav%s\n视频弹幕数累计折线图' % (videoInfo['title'], videoInfo['aid']), fontproperties=font)
+    plt.plot(xs, danmakuAccumulateCount, label='弹幕累计数量')
+    plt.plot(xs, danmakuCountPerDay, label='弹幕每日数量')
+    plt.title('%s\nav%s\n视频弹幕数折线图' % (videoInfo['title'], videoInfo['aid']), fontproperties=font)
+    plt.legend(prop=font, loc='best')
     plt.tight_layout()
 
     # TODO：检查path以及title
-    filePath = photoFolderPath + '%s_视频弹幕数累计折线图.png' % videoInfo['title']
+    filePath = photoFolderPath + '%s_视频弹幕数折线图.png' % videoInfo['title']
     plt.savefig(filePath)
-    print('视频弹幕数累计折线图 已生成并存储')
+    print('视频弹幕数折线图 已生成并存储')
     plt.show()
+
+
+def danmakuWordCloud(videoInfo, danmakuList, photoFolderPath):
+    global backImagePath
+    isCN = True
+    onlyDanmakuList = getValueListByKeyFromDict(danmakuList, 'content')
+    backImagePath = imread(backImagePath % random.randint(1, 3))
+
+    # 获取当前文件路径
+    # __file__ 为当前文件, 在ide中运行此行会报错,可改为
+    # d = path.dirname('.')
+    # d = path.dirname(__file__)
+
+    # 词云属性
+    wc = WordCloud(font_path=fontPath, background_color="white", max_words=300,
+                   mask=backImagePath, max_font_size=200, random_state=42, margin=4)
+    if isCN:
+        onlyDanmakuList = cutAndFilter(onlyDanmakuList)
+    wc.generate(onlyDanmakuList)
+    image_colors = ImageColorGenerator(backImagePath)
+
+    filePath = photoFolderPath + '%s_弹幕词云.png' % videoInfo['title']
+    plt.figure(figsize=(19.2, 16.8))
+    # plt.imshow(wc.recolor(color_func=image_colors))
+    plt.imshow(wc)
+    plt.axis("off")
+    plt.show()
+    wc.to_file(filePath)
+
+
+# 分词与数据清洗
+def cutAndFilter(onlyDanmakuList):
+    danmakuText = ""
+    for item in onlyDanmakuList:
+        danmakuText += item
+    preOriginWordList = jieba.cut(danmakuText, cut_all=False)
+    originWordList = ','.join(preOriginWordList)
+    stopWordList = open(stopWordsPath, encoding='utf-8').read().split('\n')
+    wordList = []
+    for item in originWordList.split(','):
+        if not (item.strip() in stopWordList) and len(item.strip()) > 1:
+            if len(set(item)) > 1:
+                wordList.append(item)
+    return ' '.join(wordList)

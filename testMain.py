@@ -18,6 +18,7 @@ if __name__ == '__main__':
     colorAnalyse(videoInfo, danmakuList, photoFolderPath)
     countPerFeizhai(videoInfo, danmakuList, photoFolderPath)
     danmakuHeatMap(videoInfo, danmakuList, photoFolderPath)
+    danmakuWordCloud(videoInfo, danmakuList, photoFolderPath)
     # print(convertTimestamp(danmakuList[0]['sentTimestamp'], "%m/%d/%Y"))  # test
 
     # writeDanmakuToExcel(videoInfo, danmakuList, excelFolderPath)
