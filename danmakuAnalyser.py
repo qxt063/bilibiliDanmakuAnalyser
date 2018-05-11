@@ -2,24 +2,22 @@
 import os
 from datetime import datetime
 import random
-
 import jieba
 import matplotlib.pyplot as plt
 from matplotlib.font_manager import FontProperties
 import matplotlib.dates as mdates
 from scipy.misc import imread
-import numpy as np
 from wordcloud import WordCloud, ImageColorGenerator
-
 from danmakuDetailsDealing import *
+from getBilibiliDanmaku import titleAvailable
+from log import writeLog
 
 regexExoticChar = r"[0-9\s+\.\!\/_,$%^*()?;；:-【】+\"\']+|[+——！，;:。？、~@#￥%……&*（）]+"
 
 stopWordsPath = r'stopWords.txt'
 fontPath = r'res/font/YaHei.Consolas.1.11b.ttf'
-# backImagePath = r'res/backImg/%d.jpg'
-backImagePath = r'K:\code\信息安全综合实验\bilibiliDanmakuAnalyser\res\backImg\%d.jpg'
-root = os.path.dirname(__file__)
+oriBackImagePath = r'res/backImg/%d.jpg'
+d = os.path.dirname(__file__)
 
 font = FontProperties(fname=r"c:\windows\fonts\simsun.ttc", size=14)
 
@@ -33,10 +31,10 @@ def countOfTime(videoInfo, danmakuList, photoFolderPath):
     plt.ylabel('弹幕数量', fontproperties=font)
     plt.title('%s\nav%s\n弹幕数与时间图' % (videoInfo['title'], videoInfo['aid']), fontproperties=font)
 
-    # TODO：检查path以及title
-    filePath = photoFolderPath + '%s_弹幕数与时间图.png' % videoInfo['title']
+    # 检查path以及title
+    filePath = photoFolderPath + '%s_弹幕数与时间图.png' % titleAvailable(videoInfo)
     plt.savefig(filePath)
-    print('弹幕数与时间图 已生成并存储')
+    print(writeLog('弹幕数与时间图 已生成并存储', videoInfo=videoInfo))
     plt.show()
 
 
@@ -70,10 +68,10 @@ def colorAnalyse(videoInfo, danmakuList, photoFolderPath):
     plt.tight_layout()
     plt.legend()
 
-    # TODO：检查path以及title
-    filePath = photoFolderPath + '%s_弹幕颜色饼图.png' % videoInfo['title']
+    # 检查path以及title
+    filePath = photoFolderPath + '%s_弹幕颜色饼图.png' % titleAvailable(videoInfo)
     plt.savefig(filePath)
-    print('弹幕颜色饼状图 已生成并存储')
+    print(writeLog('弹幕颜色饼状图 已生成并存储', videoInfo=videoInfo))
     plt.show()
 
 
@@ -107,15 +105,16 @@ def countPerFeizhai(videoInfo, danmakuList, photoFolderPath):
     plt.title('%s\nav%s\n用户发送弹幕数饼图' % (videoInfo['title'], videoInfo['aid']), fontproperties=font)
     plt.tight_layout()
 
-    # TODO：检查path以及title
-    filePath = photoFolderPath + '%s_用户发送弹幕数饼图.png' % videoInfo['title']
+    # 检查path以及title
+    filePath = photoFolderPath + '%s_用户发送弹幕数饼图.png' % titleAvailable(videoInfo)
     plt.savefig(filePath)
-    print('用户发送弹幕数饼图 已生成并存储')
+    print(writeLog('用户发送弹幕数饼图 已生成并存储', videoInfo=videoInfo))
     plt.show()
 
 
-# 弹幕数随天折线图
+# 弹幕数随时间折线图
 def danmakuHeatMap(videoInfo, danmakuList, photoFolderPath):
+    # TODO：排除高级弹幕。由于高级弹幕不受弹幕池上限影响，需要排除
     originalTimestampList = getValueListByKeyFromDict(danmakuList, 'sentTimestamp')
     timestampList = []
     for item in originalTimestampList:
@@ -150,23 +149,18 @@ def danmakuHeatMap(videoInfo, danmakuList, photoFolderPath):
     plt.legend(prop=font, loc='best')
     plt.tight_layout()
 
-    # TODO：检查path以及title
-    filePath = photoFolderPath + '%s_视频弹幕数折线图.png' % videoInfo['title']
+    # 检查path以及title
+    filePath = photoFolderPath + '%s_视频弹幕数折线图.png' % titleAvailable(videoInfo)
     plt.savefig(filePath)
-    print('视频弹幕数折线图 已生成并存储')
+    print(writeLog('视频弹幕数折线图 已生成并存储', videoInfo=videoInfo))
     plt.show()
 
 
+# 弹幕词云！
 def danmakuWordCloud(videoInfo, danmakuList, photoFolderPath):
-    global backImagePath
     isCN = True
     onlyDanmakuList = getValueListByKeyFromDict(danmakuList, 'content')
-    backImagePath = imread(backImagePath % random.randint(1, 3))
-
-    # 获取当前文件路径
-    # __file__ 为当前文件, 在ide中运行此行会报错,可改为
-    # d = path.dirname('.')
-    # d = path.dirname(__file__)
+    backImagePath = imread(os.path.join(d, oriBackImagePath % random.randint(1, 7)))
 
     # 词云属性
     wc = WordCloud(font_path=fontPath, background_color="white", max_words=300,
@@ -176,13 +170,14 @@ def danmakuWordCloud(videoInfo, danmakuList, photoFolderPath):
     wc.generate(onlyDanmakuList)
     image_colors = ImageColorGenerator(backImagePath)
 
-    filePath = photoFolderPath + '%s_弹幕词云.png' % videoInfo['title']
+    filePath = photoFolderPath + '%s_弹幕词云.png' % titleAvailable(videoInfo)
     plt.figure(figsize=(19.2, 16.8))
     # plt.imshow(wc.recolor(color_func=image_colors))
     plt.imshow(wc)
     plt.axis("off")
     plt.show()
     wc.to_file(filePath)
+    print(writeLog('弹幕词云 已生成并存储', videoInfo=videoInfo))
 
 
 # 分词与数据清洗

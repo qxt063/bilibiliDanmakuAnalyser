@@ -1,16 +1,17 @@
 # -*- coding: utf-8 -*-
-
 import random
-import re
 import requests
 import xlwt
+
 from danmakuDetailsDealing import *
+from log import writeLog
 
 regexVerdictAvNumber = r'[0-9]+'
 regexCidAndAid = r'cid=(.*?)&aid=(.*?)&pre_ad='
 regexTitle = r'"title":"(.*?)"'
 regexDanmaku = r'<d p="(.*?),(.*?),(.*?),(.*?),(.*?),(.*?),(.*?),(.*?)">(.*?)</d>'
-regexSheetName = r'\:|\\|\/|\?|\*|\[|\]'
+regexTitleAvail = r'\:|\\|\/|\?|\*|\[|\]|<|>'
+regexPathAvail = r'[^..+\:]|\?|\*|<|>|\|'
 
 videoRootUrl = 'https://www.bilibili.com/video/av%s'
 danmakuRootUrl = 'https://comment.bilibili.com/%s.xml'
@@ -21,17 +22,19 @@ requestHeader = None
 def getVideoHtmlByAid(avNumber):
     global requestHeader
     requestHeader = randomHeader()
-    while not re.match(regexVerdictAvNumber, avNumber):
-        avNumber = input("av号格式有误，重新输入：")
+    if not re.match(regexVerdictAvNumber, avNumber):
+        raise AttributeError
     videoUrl = videoRootUrl % avNumber
     htmlResponse = None
     try:
         htmlResponse = requests.get(videoUrl, headers=requestHeader, timeout=30)
     except (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout):
-        print("********获取视频网页源代码超时********")
+        raise TimeoutError
+    except requests.exceptions.ConnectionError:
+        raise RuntimeError
     if htmlResponse.status_code != 200:
-        raise RuntimeError("获取视频源码失败")
-    print("已获取视频源码")
+        raise RuntimeError
+    print(writeLog("已获取视频源码：%s" % avNumber))
     return htmlResponse.text
 
 
@@ -44,17 +47,18 @@ def getCidAndAid(htmlSource):
 
 
 # 通过cid获取弹幕源码
-def getDanmakuHtml(cidAndAid):
+def getDanmakuHtml(videoInfo):
     global requestHeader
-    danmakuUrl = danmakuRootUrl % cidAndAid['cid']
-    danmakuResponse = None
+    danmakuUrl = danmakuRootUrl % videoInfo['cid']
     try:
         danmakuResponse = requests.get(danmakuUrl, headers=requestHeader, timeout=30)
     except (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout):
-        print("********获取弹幕源代码超时********")
+        raise TimeoutError
+    except requests.exceptions.ConnectionError:
+        raise RuntimeError
     if danmakuResponse.status_code != 200:
-        raise RuntimeError("获取弹幕源码失败")
-    print("已获取弹幕源码")
+        raise RuntimeError
+    print(writeLog("已获取弹幕源码", videoInfo=videoInfo))
     return danmakuResponse.text
 
 
@@ -75,13 +79,12 @@ def getDanmaku(danmakuSource):
                    'repository': danmakuItem[7],
                    'content': danmakuItem[8]}
         danmakuList.append(danmaku)
-    print("已获取弹幕")
+    print(writeLog("已生成弹幕词典"))
     return danmakuList
 
 
 # 写入excel
 def writeDanmakuToExcel(videoInfo, danmakuList, folderPath):
-    folderPath = folderPathAvailable(folderPath)
     title = titleAvailable(videoInfo)
     filePath = folderPath + '弹幕信息_%s.xls' % title
 
@@ -127,7 +130,7 @@ def writeDanmakuToExcel(videoInfo, danmakuList, folderPath):
         row += 1
 
     book.save(filePath)
-    print('写入excel已成功')
+    print(writeLog('写入excel已成功', videoInfo=videoInfo))
 
 
 def setDefaultStyle():
@@ -157,7 +160,10 @@ def setDefaultStyle():
 
 # 判断filePath是否正确
 def folderPathAvailable(folderPath):
-    # TODO：folderPath判断
+    folderPath = folderPath.strip()
+    # folderPath判断
+    while not re.match(regexPathAvail, folderPath):
+        folderPath = input("文件夹路径无效，请重新输入")
     return folderPath
 
 
@@ -165,7 +171,7 @@ def titleAvailable(videoInfo):
     title = videoInfo['title']
     if len(title) >= 31:
         title = 'av' + videoInfo['aid']
-    title = re.sub(regexSheetName, '', title, re.S)
+    title = re.sub(regexTitleAvail, '', title, re.S)
     return title
 
 
