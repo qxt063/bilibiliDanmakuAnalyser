@@ -8,15 +8,15 @@ from matplotlib.font_manager import FontProperties
 import matplotlib.dates as mdates
 from scipy.misc import imread
 from wordcloud import WordCloud, ImageColorGenerator
-from danmakuDetailsDealing import *
-from getBilibiliDanmaku import titleAvailable
-from log import writeLog
+from src.components.danmakuDetailsDealing import *
+from src.components.getBilibiliDanmaku import titleAvailable
+from src.components.log import writeLog
 
 regexExoticChar = r"[0-9\s+\.\!\/_,$%^*()?;；:-【】+\"\']+|[+——！，;:。？、~@#￥%……&*（）]+"
 
 stopWordsPath = r'stopWords.txt'
-fontPath = r'res/font/YaHei.Consolas.1.11b.ttf'
-oriBackImagePath = r'res/backImg/%d.jpg'
+fontPath = r'../../res/font/YaHei.Consolas.1.11b.ttf'
+oriBackImagePath = r'../../res/backImg/%d.jpg'
 d = os.path.dirname(__file__)
 
 font = FontProperties(fname=r"c:\windows\fonts\simsun.ttc", size=14)
@@ -160,7 +160,9 @@ def danmakuHeatMap(videoInfo, danmakuList, photoFolderPath):
 def danmakuWordCloud(videoInfo, danmakuList, photoFolderPath):
     isCN = True
     onlyDanmakuList = getValueListByKeyFromDict(danmakuList, 'content')
-    backImagePath = imread(os.path.join(d, oriBackImagePath % random.randint(1, 7)))
+    # image_path = os.path.join(d, oriBackImagePath % random.randint(1, 7))
+    image_path = r'K:/code/信息安全综合实验/bilibiliDanmakuAnalyser/res/backImg/%d.jpg' % random.randint(1, 7)
+    backImagePath = imread(image_path)
 
     # 词云属性
     wc = WordCloud(font_path=fontPath, background_color="white", max_words=300,
