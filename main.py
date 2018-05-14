@@ -42,14 +42,25 @@ if __name__ == '__main__':
             print(writeErrorLog("获取视频源码时连接异常：av%s" % avNumber))
             continue
 
-        videoInfo = getCidAndAid(html)
+        try:
+            videoInfo = getCidAndAid(html)
+        except IndexError:
+            print(writeErrorLog("av%s 视频源码出错" % avNumber))
+            continue
+
         try:
             danmakuSource = getDanmakuHtml(videoInfo)
         except TimeoutError:
-            print(writeErrorLog("获取弹幕源码时连接异常", videoInfo=videoInfo))
+            print(writeErrorLog("获取弹幕源码超时", videoInfo=videoInfo))
             continue
         except RuntimeError:
             print(writeErrorLog("获取弹幕源码时连接异常", videoInfo=videoInfo))
+            continue
+
+        try:
+            danmakuList = getDanmaku(danmakuSource)
+        except IndexError:
+            print(writeErrorLog("弹幕源码出错", videoInfo))
             continue
         # videoInfo = testData.videoInfo  # test
         # danmakuSource = testData.danmakuSource  # test
@@ -62,8 +73,7 @@ if __name__ == '__main__':
             os.makedirs(photoFolderPath)
         print(writeLog('文件夹创建成功 %s' % photoFolderPath))
 
-        danmakuList = getDanmaku(danmakuSource)
-
+        writeToMongoDB(videoInfo, danmakuList)
         writeDanmakuToExcel(videoInfo, danmakuList, excelFolderPath)
         countOfTime(videoInfo, danmakuList, photoFolderPath)
         colorAnalyse(videoInfo, danmakuList, photoFolderPath)

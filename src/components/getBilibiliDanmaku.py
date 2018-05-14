@@ -2,7 +2,7 @@
 import random
 import requests
 import xlwt
-
+from pymongo import *
 from danmakuDetailsDealing import *
 from log import writeLog
 
@@ -41,9 +41,12 @@ def getVideoHtmlByAid(avNumber):
 # 网页源码提取视频信息
 def getCidAndAid(htmlSource):
     # TODO：分P视频的获取
-    CAid = re.findall(regexCidAndAid, htmlSource)[0]
-    title = re.findall(regexTitle, htmlSource)[0]
-    return {'cid': CAid[0], 'aid': CAid[1], 'title': title}
+    try:
+        CAid = re.findall(regexCidAndAid, htmlSource)[0]
+        title = re.findall(regexTitle, htmlSource)[0]
+        return {'cid': CAid[0], 'aid': CAid[1], 'title': title}
+    except IndexError:
+        raise IndexError
 
 
 # 通过cid获取弹幕源码
@@ -66,19 +69,22 @@ def getDanmakuHtml(videoInfo):
 def getDanmaku(danmakuSource):
     danmakuItems = re.findall(regexDanmaku, danmakuSource, re.S)
     danmakuList = []
-    # for i in range(0, 35):  # 测试用数据
-    for danmakuItem in danmakuItems:
-        # danmakuItem = danmakuItems[i]
-        danmaku = {'appearTime': float(danmakuItem[0]),
-                   'type': danmakuItem[1],
-                   'fontSize': danmakuItem[2],
-                   'color': formatColor(danmakuItem[3]),
-                   'sentTimestamp': danmakuItem[4],
-                   'pool': danmakuItem[5],
-                   'feizhaiId': danmakuItem[6],
-                   'repository': danmakuItem[7],
-                   'content': danmakuItem[8]}
-        danmakuList.append(danmaku)
+    try:
+        # for i in range(0, 35):  # 测试用数据
+        for danmakuItem in danmakuItems:
+            # danmakuItem = danmakuItems[i]
+            danmaku = {'appearTime': float(danmakuItem[0]),
+                       'type': danmakuItem[1],
+                       'fontSize': danmakuItem[2],
+                       'color': formatColor(danmakuItem[3]),
+                       'sentTimestamp': danmakuItem[4],
+                       'pool': danmakuItem[5],
+                       'feizhaiId': danmakuItem[6],
+                       'repository': danmakuItem[7],
+                       'content': danmakuItem[8]}
+            danmakuList.append(danmaku)
+    except:
+        raise IndexError
     print(writeLog("已生成弹幕词典"))
     return danmakuList
 
@@ -141,6 +147,26 @@ def setDefaultStyle():
     # 定义格式
     style.font = font
     return style
+
+
+# 写入数据库
+def writeToMongoDB(videoInfo, danmakuList):
+    aid = videoInfo['aid']
+    conn = MongoClient('localhost', 27017)
+    db = conn.danmakuDB
+    dbSet = db[aid]
+    for danmaku in danmakuList:
+        danmakuJson = {'appearTime': danmaku['appearTime'],
+                       'type': danmaku['type'],
+                       'fontSize': danmaku['fontSize'],
+                       'color': danmaku['color'],
+                       'sentTimestamp': danmaku['sentTimestamp'],
+                       'pool': danmaku['pool'],
+                       'feizhaiId': danmaku['feizhaiId'],
+                       'repository': danmaku['repository'],
+                       'content': danmaku['content']}
+        dbSet.insert_one(danmakuJson)
+    print(writeLog("av%s弹幕已存至数据库" % videoInfo['aid'], videoInfo))
 
 
 # def setColorStyle(color):
