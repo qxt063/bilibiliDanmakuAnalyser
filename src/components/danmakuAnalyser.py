@@ -8,15 +8,17 @@ from matplotlib.font_manager import FontProperties
 import matplotlib.dates as mdates
 from scipy.misc import imread
 from wordcloud import WordCloud, ImageColorGenerator
-from danmakuDetailsDealing import *
-from getBilibiliDanmaku import titleAvailable
-from log import writeLog
+from src.components.danmakuDetailsDealing import *
+from src.components.getBilibiliDanmaku import titleAvailable
+from src.components.log import writeLog
+from src.components.stopWords import stopWord
 
 regexExoticChar = r"[0-9\s+\.\!\/_,$%^*()?;；:-【】+\"\']+|[+——！，;:。？、~@#￥%……&*（）]+"
 
-stopWordsPath = r'stopWords.txt'
-fontPath = r'res/font/YaHei.Consolas.1.11b.ttf'
-oriBackImagePath = r'res/backImg/%d.jpg'
+stopWordsPath = r'‪K:\code\bilibiliDanmakuAnalyser\src\components\stopWords.txt'
+# fontPath = r'‪K:/code/bilibiliDanmakuAnalyser/res/font/YaHei.ttf'
+fontPath = r'c:\windows\fonts\simsun.ttc'
+oriBackImagePath = r'../../res/backImg/%d.jpg'
 d = os.path.dirname(__file__)
 
 font = FontProperties(fname=r"c:\windows\fonts\simsun.ttc", size=14)
@@ -160,15 +162,20 @@ def danmakuHeatMap(videoInfo, danmakuList, photoFolderPath):
 def danmakuWordCloud(videoInfo, danmakuList, photoFolderPath):
     isCN = True
     onlyDanmakuList = getValueListByKeyFromDict(danmakuList, 'content')
-    backImagePath = imread(os.path.join(d, oriBackImagePath % random.randint(1, 7)))
+    # image_path = os.path.join(d, oriBackImagePath % random.randint(1, 7))
+    image_path = r'K:/code/bilibiliDanmakuAnalyser/res/backImg/%d.jpg' % random.randint(1, 7)
+    backImagePath = imread(image_path)
 
     # 词云属性
     wc = WordCloud(font_path=fontPath, background_color="white", max_words=300,
                    mask=backImagePath, max_font_size=200, random_state=42, margin=4)
     if isCN:
         onlyDanmakuList = cutAndFilter(onlyDanmakuList)
-    wc.generate(onlyDanmakuList)
-    image_colors = ImageColorGenerator(backImagePath)
+    try:
+        wc.generate(onlyDanmakuList)
+    except:
+        pass
+    # image_colors = ImageColorGenerator(backImagePath)
 
     filePath = photoFolderPath + '%s_弹幕词云.png' % titleAvailable(videoInfo)
     plt.figure(figsize=(19.2, 16.8))
@@ -187,7 +194,11 @@ def cutAndFilter(onlyDanmakuList):
         danmakuText += item
     preOriginWordList = jieba.cut(danmakuText, cut_all=False)
     originWordList = ','.join(preOriginWordList)
-    stopWordList = open(stopWordsPath, encoding='utf-8').read().split('\n')
+    # file = open(r'‪K:\code\bilibiliDanmakuAnalyser\src\components\stopWords.txt')
+    # readFile = file.read()
+    # stopWordList = readFile.split('\n')
+    stopWor = stopWord
+    stopWordList = stopWor.split('\n')
     wordList = []
     for item in originWordList.split(','):
         if not (item.strip() in stopWordList) and len(item.strip()) > 1:

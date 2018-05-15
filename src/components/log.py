@@ -3,8 +3,8 @@ import time
 
 from pymongo import *
 
-logFile = os.path.join(os.path.dirname(__file__), 'log.txt')
-errorLogFile = os.path.join(os.path.dirname(__file__), 'errorLog.txt')
+conn = MongoClient('localhost', 27017)
+db = conn.logDB
 
 
 def setLogFile(rootPath):
@@ -24,9 +24,6 @@ def writeLog(information, videoInfo=None):
         logDB = {'目标': 'av%s %s' % (videoInfo['aid'], videoInfo['title']), '事件': information, '时间': now}
     with open(logFile, 'a')as log:
         log.write(logInfo)
-
-    conn = MongoClient('localhost', 27017)
-    db = conn.logDB
     dbSet = db['log']
     dbSet.insert_one(logDB)
     return logInfo
@@ -42,8 +39,6 @@ def writeErrorLog(information, videoInfo=None):
         errorLogDB = {'目标': 'av%s %s' % (videoInfo['aid'], videoInfo['title']), '事件': information, '时间': now}
     with open(errorLogFile, 'a')as errorLog:
         errorLog.write(errorLogInfo)
-    conn = MongoClient('localhost', 27017)
-    db = conn.logDB
     dbSet = db['errorLog']
     dbSet.insert_one(errorLogDB)
     return errorLogInfo

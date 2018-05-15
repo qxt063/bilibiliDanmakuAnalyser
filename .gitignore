@@ -1,2 +1,5 @@
 /.idea
 /__pycache__
+src/components/__pycache__
+src/gui/__pycache__
+res/font/YaHei.ttf

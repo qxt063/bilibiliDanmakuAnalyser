@@ -3,8 +3,8 @@ import random
 import requests
 import xlwt
 from pymongo import *
-from danmakuDetailsDealing import *
-from log import writeLog
+from src.components.danmakuDetailsDealing import *
+from src.components.log import writeLog
 
 regexVerdictAvNumber = r'[0-9]+'
 regexCidAndAid = r'cid=(.*?)&aid=(.*?)&pre_ad='
@@ -25,7 +25,6 @@ def getVideoHtmlByAid(avNumber):
     if not re.match(regexVerdictAvNumber, avNumber):
         raise AttributeError
     videoUrl = videoRootUrl % avNumber
-    htmlResponse = None
     try:
         htmlResponse = requests.get(videoUrl, headers=requestHeader, timeout=30)
     except (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout):
@@ -189,7 +188,7 @@ def folderPathAvailable(folderPath):
     folderPath = folderPath.strip()
     # folderPath判断
     while not re.match(regexPathAvail, folderPath):
-        folderPath = input("文件夹路径无效，请重新输入")
+        raise FileExistsError
     return folderPath
 
 
