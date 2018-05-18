@@ -14,7 +14,7 @@ from PyQt5.QtWidgets import QFileDialog
 class Ui_BilibiliDanmakuWindow(object):
     def setupUi(self, BilibiliDanmakuWindow):
         BilibiliDanmakuWindow.setObjectName("BilibiliDanmakuWindow")
-        BilibiliDanmakuWindow.resize(607, 386)
+        BilibiliDanmakuWindow.resize(607, 450)
 
         self.centralwidget = QtWidgets.QWidget(BilibiliDanmakuWindow)
         self.centralwidget.setObjectName("centralwidget")
@@ -59,7 +59,7 @@ class Ui_BilibiliDanmakuWindow(object):
         self.pushButton_selectSaveDir.setObjectName("pushButton_selectSaveDir")
 
         self.label_show_status = QtWidgets.QLabel(self.centralwidget)
-        self.label_show_status.setGeometry(QtCore.QRect(265, 250, 121, 16))
+        self.label_show_status.setGeometry(QtCore.QRect(265, 200, 121, 16))
         self.label_show_status.setObjectName("label_show_status")
 
         BilibiliDanmakuWindow.setCentralWidget(self.centralwidget)

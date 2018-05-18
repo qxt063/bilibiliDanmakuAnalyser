@@ -11,16 +11,16 @@ from wordcloud import WordCloud, ImageColorGenerator
 from src.components.danmakuDetailsDealing import *
 from src.components.getBilibiliDanmaku import titleAvailable
 from src.components.log import writeLog
-from src.components.stopWords import stopWord
 
 regexExoticChar = r"[0-9\s+\.\!\/_,$%^*()?;；:-【】+\"\']+|[+——！，;:。？、~@#￥%……&*（）]+"
 
-stopWordsPath = r'‪K:\code\bilibiliDanmakuAnalyser\src\components\stopWords.txt'
-# fontPath = r'‪K:/code/bilibiliDanmakuAnalyser/res/font/YaHei.ttf'
+currentDir = os.path.dirname(__file__)
+backDir = os.path.abspath(os.path.join(os.getcwd(), '../..'))  # 背景图片的目录
+stopWordsPath = os.path.join(currentDir, r'stopWords.txt')
+# fontPath = r'‪K:/code/bilibiliDanmakuAnalyser/res/font/YaHei.ttf' #字体报错了一下午
 fontPath = r'c:\windows\fonts\simsun.ttc'
-oriBackImagePath = r'../../res/backImg/%d.jpg'
-d = os.path.dirname(__file__)
-
+oriBackImagePath = os.path.join(backDir, r'res/backImg')
+# os.path.join(backDir, r'./res/backImg')
 font = FontProperties(fname=r"c:\windows\fonts\simsun.ttc", size=14)
 
 
@@ -163,18 +163,16 @@ def danmakuWordCloud(videoInfo, danmakuList, photoFolderPath):
     isCN = True
     onlyDanmakuList = getValueListByKeyFromDict(danmakuList, 'content')
     # image_path = os.path.join(d, oriBackImagePath % random.randint(1, 7))
-    image_path = r'K:/code/bilibiliDanmakuAnalyser/res/backImg/%d.jpg' % random.randint(1, 7)
-    backImagePath = imread(image_path)
+    image_path = os.path.join(oriBackImagePath, r'%d.jpg' % random.randint(1, 7))
+    usedImagePath = imread(image_path)
 
     # 词云属性
     wc = WordCloud(font_path=fontPath, background_color="white", max_words=300,
-                   mask=backImagePath, max_font_size=200, random_state=42, margin=4)
+                   mask=usedImagePath, max_font_size=200, random_state=42, margin=4)
     if isCN:
         onlyDanmakuList = cutAndFilter(onlyDanmakuList)
-    try:
-        wc.generate(onlyDanmakuList)
-    except:
-        pass
+    wc.generate(onlyDanmakuList)
+
     # image_colors = ImageColorGenerator(backImagePath)
 
     filePath = photoFolderPath + '%s_弹幕词云.png' % titleAvailable(videoInfo)
@@ -194,11 +192,9 @@ def cutAndFilter(onlyDanmakuList):
         danmakuText += item
     preOriginWordList = jieba.cut(danmakuText, cut_all=False)
     originWordList = ','.join(preOriginWordList)
-    # file = open(r'‪K:\code\bilibiliDanmakuAnalyser\src\components\stopWords.txt')
-    # readFile = file.read()
-    # stopWordList = readFile.split('\n')
-    stopWor = stopWord
-    stopWordList = stopWor.split('\n')
+    stopWordList = open(stopWordsPath, encoding='utf-8').read().split('\n')
+    # stopWor = stopWord
+    # stopWordList = stopWor.split('\n')
     wordList = []
     for item in originWordList.split(','):
         if not (item.strip() in stopWordList) and len(item.strip()) > 1:

@@ -1,3 +1,5 @@
+import threading
+
 from PyQt5.QtWidgets import QFileDialog
 
 import os
@@ -12,7 +14,10 @@ class GUIClass(QtWidgets.QMainWindow, Ui_BilibiliDanmakuWindow):
         super(GUIClass, self).__init__()
         self.setupUi(self)
 
-        self.lineEdit_saveDir.setText(r"K:/danmaku")
+        initSaveDir = path.join(path.abspath(path.join(os.getcwd(), '../..')), r'result')
+        initAVList = path.join(path.abspath(path.join(os.getcwd(), '../..')), r'res/avList.txt')
+        self.lineEdit_saveDir.setText(initSaveDir)
+        self.lineEdit_avList.setText(initAVList)
         self.pushButton_selectSaveDir.clicked.connect(self.button_save_openfile)
         self.pushButton_selectAvListDir.clicked.connect(self.button_avListFile)
         self.pushButton_avNumberStart.clicked.connect(self.button_startOne)
@@ -32,10 +37,12 @@ class GUIClass(QtWidgets.QMainWindow, Ui_BilibiliDanmakuWindow):
         avNumber = self.lineEdit_avNumber.text()
         savePath = self.lineEdit_saveDir.text()
         self.label_show_status.setText("正在爬取，请稍等")
-        self.label_show_status.setText(startOne(avNumber, savePath))
+        t = threading.Thread(target=startOne, args=(avNumber, savePath))
+        t.start()
 
     def button_startList(self):
         listPath = self.lineEdit_avList.text()
         savePath = self.lineEdit_saveDir.text()
         self.label_show_status.setText("正在爬取，请稍等")
-        startList(listPath, savePath)
+        t = threading.Thread(target=startList, args=(listPath, savePath))
+        t.start()
