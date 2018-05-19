@@ -18,10 +18,10 @@ def writeLog(information, videoInfo=None):
     now = str(time.strftime('%Y-%m-%d %H-%M-%S', time.localtime(time.time())))
     if videoInfo is None:
         logInfo = '事件：%s\n时间：%s\n\n' % (information, now)
-        logDB = {'目标': None, '事件': information, '时间': now}
+        logDB = {'av号': None, '标题': None, '事件': information, '时间': now}
     else:
         logInfo = 'av%s\n事件：%s\n时间：%s\n\n' % (videoInfo['aid'] + videoInfo['title'], information, now)
-        logDB = {'目标': 'av%s %s' % (videoInfo['aid'], videoInfo['title']), '事件': information, '时间': now}
+        logDB = {'av号': videoInfo['aid'], '标题': videoInfo['title'], '事件': information, '时间': now}
     with open(logFile, 'a')as log:
         log.write(logInfo)
     dbSet = db['log']
@@ -29,16 +29,26 @@ def writeLog(information, videoInfo=None):
     return logInfo
 
 
-def writeErrorLog(information, videoInfo=None):
+def writeErrorLog(information, avNumber):
     now = str(time.strftime('%Y-%m-%d %H-%M-%S', time.localtime(time.time())))
-    if videoInfo is None:
-        errorLogInfo = '事件：%s\n时间：%s\n\n' % (information, now)
-        errorLogDB = {'目标': None, '事件': information, '时间': now}
-    else:
-        errorLogInfo = 'av%s\n事件：%s\n时间：%s\n\n' % (videoInfo['aid'] + videoInfo['title'], information, now)
-        errorLogDB = {'目标': 'av%s %s' % (videoInfo['aid'], videoInfo['title']), '事件': information, '时间': now}
+    errorLogInfo = 'av号：%s\n事件：%s\n时间：%s\n\n' % (avNumber, information, now)
+    errorLogDB = {'av号': avNumber, '事件': information, '时间': now}
     with open(errorLogFile, 'a')as errorLog:
         errorLog.write(errorLogInfo)
     dbSet = db['errorLog']
     dbSet.insert_one(errorLogDB)
     return errorLogInfo
+
+# def writeErrorLog(information, videoInfo=None):
+#     now = str(time.strftime('%Y-%m-%d %H-%M-%S', time.localtime(time.time())))
+#     if videoInfo is None:
+#         errorLogInfo = '事件：%s\n时间：%s\n\n' % (information, now)
+#         errorLogDB = {'av号': None, '标题': None, '事件': information, '时间': now}
+#     else:
+#         errorLogInfo = 'av%s\n事件：%s\n时间：%s\n\n' % (videoInfo['aid'] + videoInfo['title'], information, now)
+#         errorLogDB = {'av号': videoInfo['aid'], '标题': videoInfo['title'], '事件': information, '时间': now}
+#     with open(errorLogFile, 'a')as errorLog:
+#         errorLog.write(errorLogInfo)
+#     dbSet = db['errorLog']
+#     dbSet.insert_one(errorLogDB)
+#     return errorLogInfo

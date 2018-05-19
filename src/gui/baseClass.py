@@ -14,7 +14,7 @@ from PyQt5.QtWidgets import QFileDialog
 class Ui_BilibiliDanmakuWindow(object):
     def setupUi(self, BilibiliDanmakuWindow):
         BilibiliDanmakuWindow.setObjectName("BilibiliDanmakuWindow")
-        BilibiliDanmakuWindow.resize(607, 450)
+        BilibiliDanmakuWindow.resize(607, 600)
 
         self.centralwidget = QtWidgets.QWidget(BilibiliDanmakuWindow)
         self.centralwidget.setObjectName("centralwidget")
@@ -38,9 +38,14 @@ class Ui_BilibiliDanmakuWindow(object):
         self.pushButton_avNumberStart = QtWidgets.QPushButton(self.centralwidget)
         self.pushButton_avNumberStart.setGeometry(QtCore.QRect(520, 30, 75, 23))
         self.pushButton_avNumberStart.setObjectName("pushButton_avNumberStart")
+
         self.pushButton_avListStart = QtWidgets.QPushButton(self.centralwidget)
         self.pushButton_avListStart.setGeometry(QtCore.QRect(520, 80, 75, 23))
         self.pushButton_avListStart.setObjectName("pushButton_avListStart")
+
+        self.pushButton_openSaveDir = QtWidgets.QPushButton(self.centralwidget)
+        self.pushButton_openSaveDir.setGeometry(QtCore.QRect(520, 150, 75, 23))
+        self.pushButton_openSaveDir.setObjectName("pushButton_openSaveDir")
 
         self.checkBox = QtWidgets.QLabel(self.centralwidget)
         self.checkBox.setGeometry(QtCore.QRect(120, 120, 121, 16))
@@ -59,8 +64,20 @@ class Ui_BilibiliDanmakuWindow(object):
         self.pushButton_selectSaveDir.setObjectName("pushButton_selectSaveDir")
 
         self.label_show_status = QtWidgets.QLabel(self.centralwidget)
-        self.label_show_status.setGeometry(QtCore.QRect(265, 200, 121, 16))
+        self.label_show_status.setGeometry(QtCore.QRect(240, 180, 200, 16))
         self.label_show_status.setObjectName("label_show_status")
+
+        self.lineEdit_getDanmakuAvNumber = QtWidgets.QLineEdit(self.centralwidget)
+        self.lineEdit_getDanmakuAvNumber.setGeometry(QtCore.QRect(120, 220, 113, 20))
+        self.lineEdit_getDanmakuAvNumber.setObjectName("lineEdit_getDanmakuAvNumber")
+
+        self.pushButton_getDanmakuAvNumber = QtWidgets.QPushButton(self.centralwidget)
+        self.pushButton_getDanmakuAvNumber.setGeometry(QtCore.QRect(300, 219, 120, 23))
+        self.pushButton_getDanmakuAvNumber.setObjectName("pushButton_getDanmakuAvNumber")
+
+        self.plainTextEdit = QtWidgets.QPlainTextEdit(self.centralwidget)
+        self.plainTextEdit.setGeometry(QtCore.QRect(10, 250, 580, 320))
+        self.plainTextEdit.setObjectName("plainTextEdit")
 
         BilibiliDanmakuWindow.setCentralWidget(self.centralwidget)
         self.statusbar = QtWidgets.QStatusBar(BilibiliDanmakuWindow)
@@ -81,4 +98,6 @@ class Ui_BilibiliDanmakuWindow(object):
         self.checkBox.setText(_translate("BilibiliDanmakuWindow", "存储路径"))
         self.pushButton_selectAvListDir.setText(_translate("BilibiliDanmakuWindow", "..."))
         self.pushButton_selectSaveDir.setText(_translate("BilibiliDanmakuWindow", "..."))
+        self.pushButton_openSaveDir.setText(_translate("BilibiliDanmakuWindow", "打开文件夹"))
+        self.pushButton_getDanmakuAvNumber.setText(_translate("BilibiliDanmakuWindow", "查找弹幕数据"))
         BilibiliDanmakuWindow.setWindowTitle(_translate("MainWindow", "弹幕获取分析"))

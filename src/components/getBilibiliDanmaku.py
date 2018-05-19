@@ -17,6 +17,9 @@ videoRootUrl = 'https://www.bilibili.com/video/av%s'
 danmakuRootUrl = 'https://comment.bilibili.com/%s.xml'
 requestHeader = None
 
+conn = MongoClient('localhost', 27017)
+db = conn.danmakuDB
+
 
 # av号获取视频源码
 def getVideoHtmlByAid(avNumber):
@@ -151,8 +154,6 @@ def setDefaultStyle():
 # 写入数据库
 def writeToMongoDB(videoInfo, danmakuList):
     aid = videoInfo['aid']
-    conn = MongoClient('localhost', 27017)
-    db = conn.danmakuDB
     dbSet = db[aid]
     for danmaku in danmakuList:
         danmakuJson = {'appearTime': danmaku['appearTime'],
@@ -166,6 +167,16 @@ def writeToMongoDB(videoInfo, danmakuList):
                        'content': danmaku['content']}
         dbSet.insert_one(danmakuJson)
     print(writeLog("av%s弹幕已存至数据库" % videoInfo['aid'], videoInfo))
+
+
+# 查询数据库
+def getDanmakuByAid(avNumebr):
+    dbSet = db[avNumebr]
+    queryArgs = {}
+    projectionFields = {'appearTime': True, 'content': True}  # 用字典指定
+    result = dbSet.find(queryArgs, projection=projectionFields)
+    print(writeLog("查找数据库已完成 av%s" % avNumebr))
+    return result
 
 
 # def setColorStyle(color):

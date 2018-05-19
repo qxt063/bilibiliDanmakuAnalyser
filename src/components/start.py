@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import threading
 from os import path
 
 from src.components.danmakuAnalyser import *
@@ -17,8 +18,10 @@ def startOne(avNumber, savePath):
     if not path.exists(savePath):
         os.makedirs(savePath)
     setLogFile(savePath)
+
     body(avNumber, savePath)
-    return "爬取完成"
+
+    return writeLog("爬取完成")
 
 
 def startList(avNumberListPath, savePath):
@@ -33,51 +36,47 @@ def startList(avNumberListPath, savePath):
     avNumList = open(avNumberListPath).read().split(',')
 
     for avNumber in avNumList:
-        try:
-            body(avNumber, savePath)
-        except AttributeError:
-            writeErrorLog("av号格式不正确：av%s" % avNumber)
-            continue
-        except TimeoutError:
-            writeErrorLog("获取源代码超时：av%s" % avNumber)
-            continue
-        except RuntimeError:
-            writeErrorLog("获取源码时连接异常：av%s" % avNumber)
-            continue
-        except IndexError:
-            writeErrorLog("av%s 源码出错" % avNumber)
-            continue
+        # threading.Thread(target=body, args=(avNumber, savePath)).start() # 多线程绘图会炸..
+        body(avNumber, savePath)
 
-    return "爬取完成"
+    return writeLog("爬取完成")
 
 
 def body(avNumber, savePath):
+    writeLog("开始爬取 av%s" % avNumber)
     avNumber = avNumber.strip()
     try:
         html = getVideoHtmlByAid(avNumber)
     except AttributeError:
-        raise AttributeError
+        writeErrorLog("av号格式不正确", avNumber)
+        return
     except TimeoutError:
-        raise TimeoutError
+        writeErrorLog("获取源代码超时", avNumber)
+        return
     except RuntimeError:
-        raise RuntimeError
+        writeErrorLog("获取源码时连接异常", avNumber)
+        return
 
     try:
         videoInfo = getCidAndAid(html)
     except IndexError:
-        raise IndexError
+        writeErrorLog("源码出错", avNumber)
+        return
 
     try:
         danmakuSource = getDanmakuHtml(videoInfo)
     except TimeoutError:
-        raise TimeoutError
+        writeErrorLog("获取源代码超时", avNumber)
+        return
     except RuntimeError:
-        raise RuntimeError
+        writeErrorLog("获取源码时连接异常", avNumber)
+        return
 
     try:
         danmakuList = getDanmaku(danmakuSource)
     except IndexError:
-        raise IndexError
+        writeErrorLog("源码出错", avNumber)
+        return
 
     title = titleAvailable(videoInfo)
     videoPath = path.join(savePath, '%s/' % title)
